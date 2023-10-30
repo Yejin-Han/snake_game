@@ -25,7 +25,7 @@ const Game = {
     squareSize = 15; // 사과/뱀의 1블럭 사이즈
     score = 0; // 점수
     speed = 0; // 속도
-    updateDelay = 0; // 게임 스피드와 연계되어 뱀의 속도를 결정짓는 변수
+    updateDelay = 0; // 키 입력시 얼마큼의 delay 후 방향을 변경할 지
     direction = "right"; // 시작시 뱀의 방향
     new_direction = null; // 키 입력시 변경될 뱀의 방향
     addNew = false; // 뱀이 사과를 먹었을 때, 새로운 사과를 놓을지 여부
@@ -119,6 +119,18 @@ const Game = {
       // lastCell과 firstCell이 이어지게
       snake.push(lastCell);
       firstCell = lastCell;
+
+      if (addNew) {
+        snake.unshift(game.add.sprite(oldLastCellx, oldLastCelly, "snake"));
+        addNew = false;
+      }
+
+      // 사과와 충돌 함수 - 득점
+      this.appleCollision();
+      // 뱀 스스로에게 충돌
+      this.selfCollision(firstCell);
+      // 벽에 충돌
+      this.wallCollision(firstCell);
     }
   },
 
@@ -129,5 +141,36 @@ const Game = {
 
     // 사과 추가
     apple = game.add.sprite(randomX, randomY, "apple");
+  },
+
+  appleCollision: function () {
+    for (let i = 0; i < snake.length; i++) {
+      if (snake[i].x == apple.x && snake[i].y == apple.y) {
+        // 이 다음에 뱀이 움직이면 새 block이 추가됨
+        addNew = true;
+        apple.destroy();
+        this.generateApple();
+        score++;
+        scoreTextValue.text = score.toString();
+      }
+    }
+  },
+
+  selfCollision: function (head) {
+    // 뱀의 머리가 뱀의 다른 block 어딘가에 닿는지 체크
+    for (let i = 0; i < snake.length - 1; i++) {
+      if (head.x == snake[i].x && head.y == snake[i].y) {
+        // 게임오버
+        game.state.start("Game_Over");
+      }
+    }
+  },
+
+  wallCollision: function (head) {
+    // 뱀의 머리가 게임 필드 안에 있는지 확인
+    if (head.x >= 600 || head.x < 0 || head.y >= 450 || head.y < 0) {
+      // 게임오버
+      game.state.start("Game_Over");
+    }
   },
 };
